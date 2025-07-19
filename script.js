@@ -12,14 +12,19 @@ const terms = [
     { word: "CHOQUE", hint: "Estado de falha circulatória.", explanation: "Choque é uma condição grave onde o corpo não recebe oxigênio e nutrientes suficientes, geralmente devido a problemas circulatórios (como hemorragia massiva no trauma). É uma das principais causas de PCR e exige intervenção imediata para reverter a falha orgânica." },
     { word: "FRATURA", hint: "Lesão óssea que pode ocorrer na RCP.", explanation: "Fratura de costelas ou esterno é uma complicação potencial das compressões torácicas. Embora deva ser evitada, a qualidade das compressões (profundidade e frequência) é prioridade sobre a preocupação com fraturas, pois estas são menos graves do que a morte por PCR." },
     { word: "AFOGADO", hint: "Vítima que precisa de ventilação imediata.", explanation: "Vítima de afogamento. Nesses casos, a PCR geralmente é de origem hipóxica (falta de oxigênio), e as ventilações são cruciais e devem ser iniciadas o mais rápido possível, mesmo antes das compressões em alguns protocolos." },
-    { word: "CADEIA", hint: "Sequência de ações para salvar vidas.", explanation: "Cadeia de Sobrevivência: é uma sequência de ações críticas (como reconhecimento precoce, acionamento do serviço de emergência, RCP precoce, desfibrilação e cuidados pós-parada) que, quando aplicadas corretamente, aumentam significativamente as chances de sobrevivência da vítima de PCR." }
-    // Adicione mais termos de RCP aqui! Tente manter as palavras com 3 a 7 letras, para o estilo Termo.
+    { word: "CADEIA", hint: "Sequência de ações para salvar vidas.", explanation: "Cadeia de Sobrevivência: é uma sequência de ações críticas (como reconhecimento precoce, acionamento do serviço de emergência, RCP precoce, desfibrilação e cuidados pós-parada) que, quando aplicadas corretamente, aumentam significativamente as chances de sobrevivência da vítima de PCR." },
+    { word: "OXIGENIO", hint: "Gás vital para a respiração.", explanation: "O oxigênio é um gás essencial para a vida, transportado pelo sangue para as células. Na RCP, a ventilação fornece oxigênio aos pulmões para ser distribuído ao corpo." },
+    { word: "COLAR", hint: "Suporte para coluna cervical.", explanation: "Colar cervical é um dispositivo usado para imobilizar a coluna cervical (pescoço) de vítimas de trauma, prevenindo ou minimizando lesões na medula espinhal durante o manuseio e transporte." },
+    { word: "AVALIA", hint: "Verificar o paciente. Primeiro passo no XABCDE.", explanation: "Avaliar é o ato de examinar o paciente de forma sistemática (como no XABCDE) para identificar problemas e determinar a prioridade do tratamento. Na RCP, inclui verificar consciência, respiração e pulso." },
+    { word: "VENTILA", hint: "Ato de auxiliar a respiração.", explanation: "Ventilação é o ato de mover ar para dentro e para fora dos pulmões. Na RCP, a ventilação de resgate (boca a boca ou com dispositivo) fornece oxigênio a quem não consegue respirar por conta própria." },
+    { word: "TORNIQ", hint: "Controle de hemorragia grave.", explanation: "Torniquete é um dispositivo usado para aplicar pressão em um membro, controlando hemorragias externas maciças que não podem ser contidas por outros métodos. É uma medida salvadora em traumas com sangramento exsanguinante." }
 ];
 
 // --- Lógica da "Palavra Diária" ---
 function getTodayDateString() {
     const today = new Date();
     // Ajusta para o fuso horário de Rio Branco (UTC-5)
+    // Isso garante que a virada da "palavra do dia" ocorra à meia-noite no fuso horário local.
     const offset = -5 * 60; // Offset em minutos
     const rioBrancoTime = new Date(today.getTime() + (today.getTimezoneOffset() * 60000) + (offset * 60000));
     return rioBrancoTime.toISOString().slice(0, 10); // Formato YYYY-MM-DD
@@ -31,13 +36,13 @@ function getDailyWordData() {
     let dailyWordIndex = parseInt(localStorage.getItem('dailyWordIndex') || '0');
 
     if (lastPlayedDate !== todayDate) {
-        // Novo dia, pega a próxima palavra
+        // É um novo dia, pega a próxima palavra
         dailyWordIndex = (dailyWordIndex + 1) % terms.length; // Cicla pelas palavras
         localStorage.setItem('lastPlayedDate', todayDate);
         localStorage.setItem('dailyWordIndex', dailyWordIndex);
         localStorage.removeItem('guesses'); // Reseta as tentativas para o novo dia
-        localStorage.removeItem('gameWon'); // Reseta o estado do jogo
-        localStorage.removeItem('gameLost'); // Reseta o estado do jogo
+        localStorage.removeItem('gameWon'); // Reseta o estado de vitória
+        localStorage.removeItem('gameLost'); // Reseta o estado de derrota
     }
     return terms[dailyWordIndex];
 }
@@ -68,49 +73,52 @@ const restartButton = document.getElementById('restart-button'); // Botão "Joga
 
 function initializeGame() {
     hintText.textContent = `Dica: ${currentHint}`;
-
-    // Define o número de colunas da grade dinamicamente
+    
+    // Define o número de colunas da grade dinamicamente baseado no tamanho da palavra
     gridContainer.style.setProperty('--word-length', secretWord.length);
 
-    // Cria as células da grade
+    // Cria as células da grade (6 linhas x tamanho da palavra)
     for (let i = 0; i < maxGuesses; i++) {
         const row = document.createElement('div');
         row.classList.add('row');
         for (let j = 0; j < secretWord.length; j++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            const span = document.createElement('span'); // Span para centralizar o texto
+            const span = document.createElement('span'); // Span para a letra, agora centralizado pelo CSS da célula
             cell.appendChild(span);
             row.appendChild(cell);
         }
         gridContainer.appendChild(row);
     }
 
-    // Carrega tentativas anteriores se houver
+    // Carrega tentativas anteriores e colore as células
     guesses.forEach((guess, index) => {
         const row = gridContainer.children[index];
-        const secretLetters = secretWord.split(''); // Cópia para não modificar o original
-        const guessLetters = guess.split('');
+        // Para aplicar cores corretamente ao carregar do localStorage, recriamos a lógica
+        const tempSecret = secretWord.split(''); // Cópia da palavra secreta para manipulação
 
-        // Primeira passagem para 'correct'
-        for (let i = 0; i < guess.length; i++) {
+        // 1ª passagem: Marcar letras CORRETAS
+        for (let i = 0; i < secretWord.length; i++) {
             const cell = row.children[i];
-            const letter = guessLetters[i];
-            cell.children[0].textContent = letter; // Adiciona no span
-            if (letter === secretLetters[i]) {
+            const letter = guess[i];
+            cell.children[0].textContent = letter; // Coloca a letra no span
+
+            if (letter === tempSecret[i]) {
                 cell.classList.add('correct');
-                secretLetters[i] = null; // Marca como usada
+                tempSecret[i] = null; // Marca a posição como "usada"
             }
         }
-        // Segunda passagem para 'present' e 'absent'
-        for (let i = 0; i < guess.length; i++) {
+
+        // 2ª passagem: Marcar letras PRESENTES e AUSENTES
+        for (let i = 0; i < secretWord.length; i++) {
             const cell = row.children[i];
-            const letter = guessLetters[i];
-            if (!cell.classList.contains('correct')) {
-                const presentIndex = secretLetters.indexOf(letter);
+            const letter = guess[i];
+
+            if (!cell.classList.contains('correct')) { // Só processa se não for 'correct'
+                const presentIndex = tempSecret.indexOf(letter);
                 if (presentIndex !== -1) {
                     cell.classList.add('present');
-                    secretLetters[presentIndex] = null; // Marca como usada
+                    tempSecret[presentIndex] = null; // Marca a letra como "usada"
                 } else {
                     cell.classList.add('absent');
                 }
@@ -118,7 +126,7 @@ function initializeGame() {
         }
     });
 
-    // Verifica o estado do jogo do localStorage
+    // Verifica o estado final do jogo e desabilita input se já terminou
     if (gameWon) {
         showMessage("Você já acertou a palavra do dia!", 'success-message');
         revealExplanation();
@@ -128,8 +136,11 @@ function initializeGame() {
         revealExplanation();
         disableInput();
     } else {
+        // Se o jogo não terminou, habilita o input e o botão de tentar
         guessInput.disabled = false;
         submitButton.disabled = false;
+        // Foca no input para facilitar a digitação
+        guessInput.focus(); 
     }
 }
 
@@ -147,18 +158,18 @@ function checkGuess() {
     }
 
     const currentRow = gridContainer.children[currentGuessIndex];
-    const secretLetters = secretWord.split(''); // Cópia para evitar modificar o original
+    const secretLetters = secretWord.split(''); // Cópia para manipulação
     const guessLetters = guess.split('');
 
     // 1. Marcar letras corretas (verde)
     for (let i = 0; i < secretWord.length; i++) {
         const cell = currentRow.children[i];
         const letter = guessLetters[i];
-        cell.children[0].textContent = letter; // Adiciona a letra ao span dentro da célula
+        cell.children[0].textContent = letter; // Adiciona a letra ao span
 
         if (letter === secretLetters[i]) {
             cell.classList.add('correct');
-            secretLetters[i] = null; // Marca a letra como "usada"
+            secretLetters[i] = null; // Marca a posição como "usada"
         }
     }
 
@@ -184,6 +195,7 @@ function checkGuess() {
 
     currentGuessIndex++;
     guessInput.value = ''; // Limpa o input
+    guessInput.focus(); // Mantém o foco no input para a próxima tentativa
 
     if (guess === secretWord) {
         gameWon = true;
