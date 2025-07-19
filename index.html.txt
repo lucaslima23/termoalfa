@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termo RCP - [Projeto Alfa]</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="logoalfa.png" alt="Logo" class="logo"> 
+        <h1>Termo RCP do Dia</h1>
+        <p>Desenvolvido por: [Lucas Matheus de Sousa Lima]</p>
+    </header>
+
+    <main id="game-container">
+        <h2 id="hint-text">Dica: Carregando...</h2>
+        <div id="grid-container" class="grid">
+            </div>
+        <input type="text" id="guess-input" maxlength="7" placeholder="Digite sua palavra" disabled>
+        <button id="submit-guess" disabled>Tentar</button>
+        <div id="message-area" class="message"></div>
+
+        <div id="explanation-area" class="explanation" style="display: none;">
+            <h3>Palavra do Dia: <span id="revealed-word"></span></h3>
+            <p id="word-explanation"></p>
+            <button id="restart-button" class="button">Jogar Novamente Amanhã</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 [Seu Nome/Marca]. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
