@@ -59,20 +59,24 @@ h2#hint-text {
 
 .cell {
     width: 100%; /* Para que a célula se ajuste ao grid */
-    padding-top: 100%; /* Cria um quadrado */
-    position: relative;
+    padding-bottom: 100%; /* Cria um quadrado usando padding-bottom */
+    position: relative; /* Necessário para posicionar o span internamente */
     border: 2px solid #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: flex; /* Usar flexbox para centralizar */
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
     font-size: 2em;
     font-weight: bold;
     text-transform: uppercase;
     background-color: #f9f9f9;
     transition: background-color 0.5s ease, border-color 0.5s ease;
 }
+
 .cell span {
-    position: absolute; /* Centraliza o texto */
+    position: absolute; /* Permite centralizar o texto dentro do quadrado */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 /* Cores das células */
