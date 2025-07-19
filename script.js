@@ -5,10 +5,10 @@ const terms = [
     { word: "PULSO", hint: "Indica batimento cardíaco.", explanation: "O pulso é a onda de pressão gerada pelo batimento cardíaco, palpável em artérias como a carótida ou radial. Sua ausência em uma vítima inconsciente, que não respira, indica parada cardíaca." },
     { word: "TORAX", hint: "Local das compressões.", explanation: "O tórax é a região do corpo onde as compressões torácicas são realizadas, especificamente no centro do esterno. A compressão eficaz do tórax é vital para bombear sangue para o cérebro e órgãos vitais durante a RCP." },
     { word: "ASFIXIA", hint: "Causa comum de PCR em crianças.", explanation: "Asfixia é a privação severa de oxigênio. Em crianças, é uma causa comum de parada cardiorrespiratória, podendo ser causada por engasgos, sufocamento ou doenças respiratórias graves." },
-    { word: "GASPING", hint: "Respiração agonal, ineficaz.", explanation: "Gasping (ou respiração agonal) é uma respiração ofegante, ruidosa e ineficaz que não fornece oxigênio adequado. É um sinal de parada cardíaca e deve ser interpretado como ausência de respiração normal, exigindo o início imediato da RCP." },
+    { word: "GASPI", hint: "Respiração agonal, ineficaz.", explanation: "Gasping (ou respiração agonal) é uma respiração ofegante, ruidosa e ineficaz que não fornece oxigênio adequado. É um sinal de parada cardíaca e deve ser interpretado como ausência de respiração normal, exigindo o início imediato da RCP." },
     { word: "SAMU", hint: "Serviço de emergência 192.", explanation: "SAMU (Serviço de Atendimento Móvel de Urgência) é o serviço de atendimento pré-hospitalar que deve ser acionado (telefone 192) em casos de parada cardiorrespiratória e outras emergências médicas. O acionamento precoce é um elo crucial da cadeia de sobrevivência." },
-    { word: "VIA AEREA", hint: "Primeira etapa vital, letra A do XABCDE.", explanation: "Via Aérea (Airway) é o canal que leva o ar aos pulmões. A avaliação e desobstrução da via aérea são passos iniciais e fundamentais na RCP e no trauma (letra 'A' do XABCDE), pois garantem a oxigenação." },
-    { word: "ESTERNO", hint: "Osso central do tórax.", explanation: "O esterno é o osso plano e central do tórax onde as mãos são posicionadas para as compressões torácicas durante a RCP. É a estrutura sobre a qual o coração é comprimido." },
+    { word: "VIAEREA", hint: "Primeira etapa vital, letra A do XABCDE.", explanation: "Via Aérea (Airway) é o canal que leva o ar aos pulmões. A avaliação e desobstrução da via aérea são passos iniciais e fundamentais na RCP e no trauma (letra 'A' do XABCDE), pois garantem a oxigenação." },
+    { word: "ESTENO", hint: "Osso central do tórax.", explanation: "O esterno é o osso plano e central do tórax onde as mãos são posicionadas para as compressões torácicas durante a RCP. É a estrutura sobre a qual o coração é comprimido." },
     { word: "CHOQUE", hint: "Estado de falha circulatória.", explanation: "Choque é uma condição grave onde o corpo não recebe oxigênio e nutrientes suficientes, geralmente devido a problemas circulatórios (como hemorragia massiva no trauma). É uma das principais causas de PCR e exige intervenção imediata para reverter a falha orgânica." },
     { word: "FRATURA", hint: "Lesão óssea que pode ocorrer na RCP.", explanation: "Fratura de costelas ou esterno é uma complicação potencial das compressões torácicas. Embora deva ser evitada, a qualidade das compressões (profundidade e frequência) é prioridade sobre a preocupação com fraturas, pois estas são menos graves do que a morte por PCR." },
     { word: "AFOGADO", hint: "Vítima que precisa de ventilação imediata.", explanation: "Vítima de afogamento. Nesses casos, a PCR geralmente é de origem hipóxica (falta de oxigênio), e as ventilações são cruciais e devem ser iniciadas o mais rápido possível, mesmo antes das compressões em alguns protocolos." },
@@ -16,47 +16,55 @@ const terms = [
     { word: "OXIGENIO", hint: "Gás vital para a respiração.", explanation: "O oxigênio é um gás essencial para a vida, transportado pelo sangue para as células. Na RCP, a ventilação fornece oxigênio aos pulmões para ser distribuído ao corpo." },
     { word: "COLAR", hint: "Suporte para coluna cervical.", explanation: "Colar cervical é um dispositivo usado para imobilizar a coluna cervical (pescoço) de vítimas de trauma, prevenindo ou minimizando lesões na medula espinhal durante o manuseio e transporte." },
     { word: "AVALIA", hint: "Verificar o paciente. Primeiro passo no XABCDE.", explanation: "Avaliar é o ato de examinar o paciente de forma sistemática (como no XABCDE) para identificar problemas e determinar a prioridade do tratamento. Na RCP, inclui verificar consciência, respiração e pulso." },
-    { word: "VENTILAR", hint: "Ato de auxiliar a respiração.", explanation: "Ventilação é o ato de mover ar para dentro e para fora dos pulmões. Na RCP, a ventilação de resgate (boca a boca ou com dispositivo) fornece oxigênio a quem não consegue respirar por conta própria." },
-    { word: "TORNIQUETE", hint: "Controle de hemorragia grave.", explanation: "Torniquete é um dispositivo usado para aplicar pressão em um membro, controlando hemorragias externas maciças que não podem ser contidas por outros métodos. É uma medida salvadora em traumas com sangramento exsanguinante." }
+    { word: "VENTILA", hint: "Ato de auxiliar a respiração.", explanation: "Ventilação é o ato de mover ar para dentro e para fora dos pulmões. Na RCP, a ventilação de resgate (boca a boca ou com dispositivo) fornece oxigênio a quem não consegue respirar por conta própria." },
+    { word: "TORNIQ", hint: "Controle de hemorragia grave.", explanation: "Torniquete é um dispositivo usado para aplicar pressão em um membro, controlando hemorragias externas maciças que não podem ser contidas por outros métodos. É uma medida salvadora em traumas com sangramento exsanguinante." }
 ];
 
-// --- Lógica da "Palavra Diária" ---
-function getTodayDateString() {
-    const today = new Date();
-    // Ajusta para o fuso horário de Rio Branco (UTC-5)
-    // Isso garante que a virada da "palavra do dia" ocorra à meia-noite no fuso horário local.
+// --- Configuração da Data de Início do Jogo ---
+// Mantenha essa data fixa. A palavra do dia (e de dias anteriores) será calculada a partir dela.
+const GAME_START_DATE_STR = "2025-07-01"; // Formato YYYY-MM-DD
+const GAME_START_DATE = new Date(GAME_START_DATE_STR + "T12:00:00Z"); // Usar UTC para cálculo consistente
+
+// --- Lógica de Data e Palavra ---
+function getRioBrancoDate(date) {
+    // Ajusta qualquer objeto Date para o fuso horário de Rio Branco (UTC-5)
     const offset = -5 * 60; // Offset em minutos
-    const rioBrancoTime = new Date(today.getTime() + (today.getTimezoneOffset() * 60000) + (offset * 60000));
+    return new Date(date.getTime() + (date.getTimezoneOffset() * 60000) + (offset * 60000));
+}
+
+function getTodayDateStringRioBranco() {
+    const today = new Date();
+    const rioBrancoTime = getRioBrancoDate(today);
     return rioBrancoTime.toISOString().slice(0, 10); // Formato YYYY-MM-DD
 }
 
-function getDailyWordData() {
-    const todayDate = getTodayDateString();
-    let lastPlayedDate = localStorage.getItem('lastPlayedDate');
-    let dailyWordIndex = parseInt(localStorage.getItem('dailyWordIndex') || '0');
+function getWordIndexForDate(dateString) {
+    const targetDate = new Date(dateString + "T12:00:00Z"); // Usar UTC para cálculo consistente
+    const oneDay = 1000 * 60 * 60 * 24;
+    const diffTime = Math.abs(targetDate.getTime() - GAME_START_DATE.getTime());
+    const diffDays = Math.floor(diffTime / oneDay);
+    return diffDays % terms.length;
+}
 
-    if (lastPlayedDate !== todayDate) {
-        // É um novo dia, pega a próxima palavra
-        dailyWordIndex = (dailyWordIndex + 1) % terms.length; // Cicla pelas palavras
-        localStorage.setItem('lastPlayedDate', todayDate);
-        localStorage.setItem('dailyWordIndex', dailyWordIndex);
-        localStorage.removeItem('guesses'); // Reseta as tentativas para o novo dia
-        localStorage.removeItem('gameWon'); // Reseta o estado de vitória
-        localStorage.removeItem('gameLost'); // Reseta o estado de derrota
-    }
+function getCurrentDailyWordData() {
+    const todayDateString = getTodayDateStringRioBranco();
+    const dailyWordIndex = getWordIndexForDate(todayDateString);
     return terms[dailyWordIndex];
 }
 
 // --- VARIÁVEIS GLOBAIS DO JOGO ---
-let secretWordData = getDailyWordData();
-let secretWord = secretWordData.word.toUpperCase();
-let secretExplanation = secretWordData.explanation;
-let currentHint = secretWordData.hint;
-let guesses = JSON.parse(localStorage.getItem('guesses')) || []; // Carrega tentativas salvas
+let secretWordData;
+let secretWord;
+let secretExplanation;
+let currentHint;
+
+let guesses; // Tentativas
 const maxGuesses = 6;
-let currentGuessIndex = guesses.length; // Onde o usuário está agora na grade
-let gameWon = JSON.parse(localStorage.getItem('gameWon')) || false;
-let gameLost = JSON.parse(localStorage.getItem('gameLost')) || false;
+let currentGuessIndex; // Onde o usuário está agora na grade
+let gameWon;
+let gameLost;
+
+let isArchiveMode = false; // Flag para saber se estamos no modo de arquivo de datas
 
 // --- ELEMENTOS HTML ---
 const hintText = document.getElementById('hint-text');
@@ -67,11 +75,48 @@ const messageArea = document.getElementById('message-area');
 const explanationArea = document.getElementById('explanation-area');
 const revealedWord = document.getElementById('revealed-word');
 const wordExplanation = document.getElementById('word-explanation');
-const restartButton = document.getElementById('restart-button'); // Botão "Jogar Novamente Amanhã"
+const goToArchiveButton = document.getElementById('go-to-archive-button'); // Novo botão
+const archiveReturnButton = document.getElementById('archive-return-button'); // Novo botão de retorno
 
 // --- FUNÇÕES DO JOGO ---
 
+function loadGameState(dateString) {
+    let storageKeySuffix = dateString ? `-${dateString}` : '';
+
+    // Verifica se estamos no modo arquivo
+    isArchiveMode = !!dateString;
+
+    // Se estiver no modo arquivo, o dailyWordIndex vem do dateString
+    // Se não, usa a lógica de palavra diária normal
+    const wordIndex = isArchiveMode ? getWordIndexForDate(dateString) : getWordIndexForDate(getTodayDateStringRioBranco());
+    secretWordData = terms[wordIndex];
+    secretWord = secretWordData.word.toUpperCase();
+    secretExplanation = secretWordData.explanation;
+    currentHint = secretWordData.hint;
+
+    // Carrega o estado do jogo do localStorage para a data específica ou para o dia atual
+    guesses = JSON.parse(localStorage.getItem(`guesses${storageKeySuffix}`)) || [];
+    gameWon = JSON.parse(localStorage.getItem(`gameWon${storageKeySuffix}`)) || false;
+    gameLost = JSON.parse(localStorage.getItem(`gameLost${storageKeySuffix}`)) || false;
+    currentGuessIndex = guesses.length;
+
+    // Atualiza a URL do botão de retorno se estivermos em modo arquivo
+    if (archiveReturnButton) { // Checa se o botão existe (só existe no archive.html)
+        if (isArchiveMode) {
+            archiveReturnButton.style.display = 'block';
+        } else {
+            archiveReturnButton.style.display = 'none';
+        }
+    }
+}
+
 function initializeGame() {
+    // Pega a data da URL se existir (modo arquivo)
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedDate = urlParams.get('date');
+
+    loadGameState(selectedDate); // Carrega o estado para a data selecionada ou para o dia atual
+
     hintText.textContent = `Dica: ${currentHint}`;
     
     // Define o número de colunas da grade dinamicamente baseado no tamanho da palavra
@@ -94,7 +139,6 @@ function initializeGame() {
     // Carrega tentativas anteriores e colore as células
     guesses.forEach((guess, index) => {
         const row = gridContainer.children[index];
-        // Para aplicar cores corretamente ao carregar do localStorage, recriamos a lógica
         const tempSecret = secretWord.split(''); // Cópia da palavra secreta para manipulação
 
         // 1ª passagem: Marcar letras CORRETAS
@@ -118,7 +162,7 @@ function initializeGame() {
                 const presentIndex = tempSecret.indexOf(letter);
                 if (presentIndex !== -1) {
                     cell.classList.add('present');
-                    tempSecret[presentIndex] = null; // Marca a letra como "usada"
+                    tempSecret[presentIndex] = null; // Marca como "usada"
                 } else {
                     cell.classList.add('absent');
                 }
@@ -128,18 +172,22 @@ function initializeGame() {
 
     // Verifica o estado final do jogo e desabilita input se já terminou
     if (gameWon) {
-        showMessage("Você já acertou a palavra do dia!", 'success-message');
+        showMessage("Você já acertou a palavra deste dia!", 'success-message');
         revealExplanation();
         disableInput();
     } else if (gameLost) {
         showMessage(`Fim de jogo! A palavra era: ${secretWord}`, 'error-message');
         revealExplanation();
         disableInput();
-    } else {
-        // Se o jogo não terminou, habilita o input e o botão de tentar
+    } else if (isArchiveMode) {
+        // No modo arquivo, se não terminou, o jogo está habilitado
         guessInput.disabled = false;
         submitButton.disabled = false;
-        // Foca no input para facilitar a digitação
+        guessInput.focus();
+    } else {
+        // No modo do dia atual, habilita o input e o botão de tentar
+        guessInput.disabled = false;
+        submitButton.disabled = false;
         guessInput.focus(); 
     }
 }
@@ -189,9 +237,10 @@ function checkGuess() {
         }
     }
 
-    // Salva a tentativa
+    // Salva a tentativa para a data específica ou para o dia atual
+    let storageKeySuffix = isArchiveMode ? `-${getDailyWordData().date}` : ''; // Re-obtem a data da palavra atual
     guesses.push(guess);
-    localStorage.setItem('guesses', JSON.stringify(guesses));
+    localStorage.setItem(`guesses${storageKeySuffix}`, JSON.stringify(guesses));
 
     currentGuessIndex++;
     guessInput.value = ''; // Limpa o input
@@ -199,13 +248,13 @@ function checkGuess() {
 
     if (guess === secretWord) {
         gameWon = true;
-        localStorage.setItem('gameWon', true);
+        localStorage.setItem(`gameWon${storageKeySuffix}`, true);
         showMessage('Parabéns! Você acertou!', 'success-message');
         revealExplanation();
         disableInput();
     } else if (currentGuessIndex >= maxGuesses) {
         gameLost = true;
-        localStorage.setItem('gameLost', true);
+        localStorage.setItem(`gameLost${storageKeySuffix}`, true);
         showMessage(`Fim de jogo! A palavra era: ${secretWord}`, 'error-message');
         revealExplanation();
         disableInput();
@@ -237,16 +286,19 @@ guessInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Botão para resetar o jogo para o próximo dia (só para testes ou no caso de querer jogar de novo no mesmo dia)
-restartButton.addEventListener('click', () => {
-    if (confirm("Isso irá resetar o jogo para o próximo termo. Deseja continuar?")) {
-        localStorage.removeItem('lastPlayedDate');
-        localStorage.removeItem('guesses');
-        localStorage.removeItem('gameWon');
-        localStorage.removeItem('gameLost');
-        location.reload(); // Recarrega a página para iniciar um novo jogo
-    }
-});
+// Listener para o novo botão "Tente o Termo de dias anteriores"
+if (goToArchiveButton) { // Verifica se o botão existe no HTML atual
+    goToArchiveButton.addEventListener('click', () => {
+        window.location.href = 'archive.html'; // Redireciona para a página de arquivo
+    });
+}
+
+// Listener para o botão de retorno na página de arquivo (se houver)
+if (archiveReturnButton) {
+    archiveReturnButton.addEventListener('click', () => {
+        window.location.href = 'index.html'; // Volta para o jogo do dia
+    });
+}
 
 // --- INICIALIZA O JOGO ---
 initializeGame();
