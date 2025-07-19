@@ -21,8 +21,7 @@ const terms = [
 ];
 
 // --- Configuração da Data de Início do Jogo ---
-// Mantenha essa data fixa. A palavra do dia (e de dias anteriores) será calculada a partir dela.
-const GAME_START_DATE_STR = "2025-07-01"; // Formato YYYY-MM-DD
+const GAME_START_DATE_STR = "2025-01-01"; // Data de início fixa para o ciclo de palavras
 const GAME_START_DATE = new Date(GAME_START_DATE_STR + "T12:00:00Z"); // Usar UTC para cálculo consistente
 
 // --- Lógica de Data e Palavra ---
@@ -46,19 +45,13 @@ function getWordIndexForDate(dateString) {
     return diffDays % terms.length;
 }
 
-function getCurrentDailyWordData() {
-    const todayDateString = getTodayDateStringRioBranco();
-    const dailyWordIndex = getWordIndexForDate(todayDateString);
-    return terms[dailyWordIndex];
-}
-
 // --- VARIÁVEIS GLOBAIS DO JOGO ---
 let secretWordData;
 let secretWord;
 let secretExplanation;
 let currentHint;
 
-let guesses; // Tentativas
+let guesses; // Tentativas do usuário no jogo atual
 const maxGuesses = 6;
 let currentGuessIndex; // Onde o usuário está agora na grade
 let gameWon;
@@ -75,20 +68,20 @@ const messageArea = document.getElementById('message-area');
 const explanationArea = document.getElementById('explanation-area');
 const revealedWord = document.getElementById('revealed-word');
 const wordExplanation = document.getElementById('word-explanation');
-const goToArchiveButton = document.getElementById('go-to-archive-button'); // Novo botão
-const archiveReturnButton = document.getElementById('archive-return-button'); // Novo botão de retorno
+const goToArchiveButton = document.getElementById('go-to-archive-button'); // Botão para ir ao arquivo
+const archiveReturnButton = document.getElementById('archive-return-button'); // Botão para voltar do arquivo
 
 // --- FUNÇÕES DO JOGO ---
 
 function loadGameState(dateString) {
-    let storageKeySuffix = dateString ? `-${dateString}` : '';
+    // A chave no localStorage agora inclui a data para jogos de arquivo
+    const storageKeySuffix = dateString ? `-${dateString}` : '';
 
-    // Verifica se estamos no modo arquivo
+    // Determina o modo de jogo
     isArchiveMode = !!dateString;
 
-    // Se estiver no modo arquivo, o dailyWordIndex vem do dateString
-    // Se não, usa a lógica de palavra diária normal
-    const wordIndex = isArchiveMode ? getWordIndexForDate(dateString) : getWordIndexForDate(getTodayDateStringRioBranco());
+    // Obtém os dados da palavra
+    const wordIndex = getWordIndexForDate(dateString || getTodayDateStringRioBranco());
     secretWordData = terms[wordIndex];
     secretWord = secretWordData.word.toUpperCase();
     secretExplanation = secretWordData.explanation;
@@ -100,14 +93,9 @@ function loadGameState(dateString) {
     gameLost = JSON.parse(localStorage.getItem(`gameLost${storageKeySuffix}`)) || false;
     currentGuessIndex = guesses.length;
 
-    // Atualiza a URL do botão de retorno se estivermos em modo arquivo
-    if (archiveReturnButton) { // Checa se o botão existe (só existe no archive.html)
-        if (isArchiveMode) {
-            archiveReturnButton.style.display = 'block';
-        } else {
-            archiveReturnButton.style.display = 'none';
-        }
-    }
+    // Controla a visibilidade dos botões de navegação
+    if (goToArchiveButton) goToArchiveButton.style.display = isArchiveMode ? 'none' : 'block';
+    if (archiveReturnButton) archiveReturnButton.style.display = isArchiveMode ? 'block' : 'none';
 }
 
 function initializeGame() {
@@ -119,8 +107,8 @@ function initializeGame() {
 
     hintText.textContent = `Dica: ${currentHint}`;
     
-    // Define o número de colunas da grade dinamicamente baseado no tamanho da palavra
     gridContainer.style.setProperty('--word-length', secretWord.length);
+    gridContainer.innerHTML = ''; // Limpa a grade antes de criar
 
     // Cria as células da grade (6 linhas x tamanho da palavra)
     for (let i = 0; i < maxGuesses; i++) {
@@ -129,7 +117,7 @@ function initializeGame() {
         for (let j = 0; j < secretWord.length; j++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            const span = document.createElement('span'); // Span para a letra, agora centralizado pelo CSS da célula
+            const span = document.createElement('span'); 
             cell.appendChild(span);
             row.appendChild(cell);
         }
@@ -139,30 +127,31 @@ function initializeGame() {
     // Carrega tentativas anteriores e colore as células
     guesses.forEach((guess, index) => {
         const row = gridContainer.children[index];
-        const tempSecret = secretWord.split(''); // Cópia da palavra secreta para manipulação
+        const tempSecret = secretWord.split(''); 
+        const guessLetters = guess.split('');
 
         // 1ª passagem: Marcar letras CORRETAS
         for (let i = 0; i < secretWord.length; i++) {
             const cell = row.children[i];
-            const letter = guess[i];
-            cell.children[0].textContent = letter; // Coloca a letra no span
+            const letter = guessLetters[i];
+            cell.children[0].textContent = letter;
 
             if (letter === tempSecret[i]) {
                 cell.classList.add('correct');
-                tempSecret[i] = null; // Marca a posição como "usada"
+                tempSecret[i] = null;
             }
         }
 
         // 2ª passagem: Marcar letras PRESENTES e AUSENTES
         for (let i = 0; i < secretWord.length; i++) {
             const cell = row.children[i];
-            const letter = guess[i];
+            const letter = guessLetters[i];
 
-            if (!cell.classList.contains('correct')) { // Só processa se não for 'correct'
+            if (!cell.classList.contains('correct')) { 
                 const presentIndex = tempSecret.indexOf(letter);
                 if (presentIndex !== -1) {
                     cell.classList.add('present');
-                    tempSecret[presentIndex] = null; // Marca como "usada"
+                    tempSecret[presentIndex] = null;
                 } else {
                     cell.classList.add('absent');
                 }
@@ -170,22 +159,17 @@ function initializeGame() {
         }
     });
 
-    // Verifica o estado final do jogo e desabilita input se já terminou
-    if (gameWon) {
-        showMessage("Você já acertou a palavra deste dia!", 'success-message');
+    // --- MUDANÇA AQUI: Exibir explicação imediatamente no modo arquivo ---
+    if (isArchiveMode) {
+        revealExplanation(); // Se é modo arquivo, exibe a explicação de cara
+        disableInput(); // E desabilita o input, pois é para consulta/revisão
+    } else if (gameWon || gameLost) {
+        // Se não é modo arquivo, mas o jogo já terminou
+        showMessage(gameWon ? "Você já acertou a palavra deste dia!" : `Fim de jogo! A palavra era: ${secretWord}`, gameWon ? 'success-message' : 'error-message');
         revealExplanation();
         disableInput();
-    } else if (gameLost) {
-        showMessage(`Fim de jogo! A palavra era: ${secretWord}`, 'error-message');
-        revealExplanation();
-        disableInput();
-    } else if (isArchiveMode) {
-        // No modo arquivo, se não terminou, o jogo está habilitado
-        guessInput.disabled = false;
-        submitButton.disabled = false;
-        guessInput.focus();
     } else {
-        // No modo do dia atual, habilita o input e o botão de tentar
+        // Se é o jogo do dia e ainda não terminou
         guessInput.disabled = false;
         submitButton.disabled = false;
         guessInput.focus(); 
@@ -194,7 +178,7 @@ function initializeGame() {
 
 function checkGuess() {
     const guess = guessInput.value.toUpperCase();
-    messageArea.textContent = ''; // Limpa mensagens anteriores
+    messageArea.textContent = ''; 
 
     if (guess.length !== secretWord.length) {
         showMessage(`A palavra deve ter ${secretWord.length} letras!`);
@@ -206,18 +190,18 @@ function checkGuess() {
     }
 
     const currentRow = gridContainer.children[currentGuessIndex];
-    const secretLetters = secretWord.split(''); // Cópia para manipulação
+    const secretLetters = secretWord.split(''); 
     const guessLetters = guess.split('');
 
     // 1. Marcar letras corretas (verde)
     for (let i = 0; i < secretWord.length; i++) {
         const cell = currentRow.children[i];
         const letter = guessLetters[i];
-        cell.children[0].textContent = letter; // Adiciona a letra ao span
+        cell.children[0].textContent = letter;
 
         if (letter === secretLetters[i]) {
             cell.classList.add('correct');
-            secretLetters[i] = null; // Marca a posição como "usada"
+            secretLetters[i] = null;
         }
     }
 
@@ -226,11 +210,11 @@ function checkGuess() {
         const cell = currentRow.children[i];
         const letter = guessLetters[i];
 
-        if (!cell.classList.contains('correct')) { // Se não foi marcada como correta antes
+        if (!cell.classList.contains('correct')) { 
             const presentIndex = secretLetters.indexOf(letter);
             if (presentIndex !== -1) {
                 cell.classList.add('present');
-                secretLetters[presentIndex] = null; // Marca como "usada"
+                secretLetters[presentIndex] = null;
             } else {
                 cell.classList.add('absent');
             }
@@ -238,13 +222,14 @@ function checkGuess() {
     }
 
     // Salva a tentativa para a data específica ou para o dia atual
-    let storageKeySuffix = isArchiveMode ? `-${getDailyWordData().date}` : ''; // Re-obtem a data da palavra atual
+    // A chave no localStorage precisa ser consistente com o loadGameState
+    let storageKeySuffix = isArchiveMode ? `-${getTodayDateStringRioBranco()}` : ''; 
     guesses.push(guess);
     localStorage.setItem(`guesses${storageKeySuffix}`, JSON.stringify(guesses));
 
     currentGuessIndex++;
-    guessInput.value = ''; // Limpa o input
-    guessInput.focus(); // Mantém o foco no input para a próxima tentativa
+    guessInput.value = ''; 
+    guessInput.focus();
 
     if (guess === secretWord) {
         gameWon = true;
@@ -263,7 +248,7 @@ function checkGuess() {
 
 function showMessage(msg, type = 'info') {
     messageArea.textContent = msg;
-    messageArea.className = 'message'; // Reseta classes
+    messageArea.className = 'message'; 
     messageArea.classList.add(type);
 }
 
@@ -286,17 +271,17 @@ guessInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Listener para o novo botão "Tente o Termo de dias anteriores"
-if (goToArchiveButton) { // Verifica se o botão existe no HTML atual
+// Listener para o botão "Termos de Dias Anteriores"
+if (goToArchiveButton) { 
     goToArchiveButton.addEventListener('click', () => {
         window.location.href = 'archive.html'; // Redireciona para a página de arquivo
     });
 }
 
-// Listener para o botão de retorno na página de arquivo (se houver)
+// Listener para o botão "Voltar para o Termo do Dia Atual" na área de explicação
 if (archiveReturnButton) {
     archiveReturnButton.addEventListener('click', () => {
-        window.location.href = 'index.html'; // Volta para o jogo do dia
+        window.location.href = 'index.html'; // Volta para o jogo do dia atual
     });
 }
 
