@@ -1,6 +1,6 @@
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f0f2f5; /* Fundo claro */
+    background-color: #efecea; /* Fundo claro */
     color: #333;
     margin: 0;
     padding: 20px;
@@ -21,7 +21,7 @@ header {
 }
 
 h1 {
-    color: #0056b3; /* Azul escuro - Cor primária */
+    color: #264534; /* Verde escuro - Cor primária */
     font-size: 2.5em;
     margin-bottom: 5px;
 }
@@ -112,7 +112,7 @@ h2#hint-text {
 
 button#submit-guess {
     padding: 12px 25px;
-    background-color: #007bff; /* Azul */
+    background-color: #8c3d65; /* Roxo */
     color: white;
     border: none;
     border-radius: 5px;
@@ -167,7 +167,7 @@ button#submit-guess:disabled {
 /* Botão de reiniciar/próximo dia */
 button#restart-button {
     padding: 12px 25px;
-    background-color: #ffc107; /* Amarelo - Cor para botão de reiniciar */
+    background-color: #e7df26; /* Amarelo - Cor para botão de reiniciar */
     color: #333;
     border: none;
     border-radius: 5px;
