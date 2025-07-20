@@ -38,23 +38,31 @@ const GAME_START_DATE = new Date(GAME_START_DATE_STR + "T12:00:00Z"); // Usar UT
 
 // --- Lógica de Data e Palavra ---
 function getRioBrancoDate(date) {
-    // Ajusta qualquer objeto Date para o fuso horário de Rio Branco (UTC-5)
+    console.log("getRioBrancoDate: input date", date);
     const offset = -5 * 60; // Offset em minutos
-    return new Date(date.getTime() + (date.getTimezoneOffset() * 60000) + (offset * 60000));
+    const rioBrancoTime = new Date(date.getTime() + (date.getTimezoneOffset() * 60000) + (offset * 60000));
+    console.log("getRioBrancoDate: adjusted date", rioBrancoTime);
+    return rioBrancoTime;
 }
 
 function getTodayDateStringRioBranco() {
+    console.log("getTodayDateStringRioBranco called.");
     const today = new Date();
     const rioBrancoTime = getRioBrancoDate(today);
-    return rioBrancoTime.toISOString().slice(0, 10); // Formato YYYY-MM-DD
+    const dateString = rioBrancoTime.toISOString().slice(0, 10);
+    console.log("getTodayDateStringRioBranco: date string", dateString);
+    return dateString;
 }
 
 function getWordIndexForDate(dateString) {
+    console.log("getWordIndexForDate called with dateString:", dateString);
     const targetDate = new Date(dateString + "T12:00:00Z"); // Usar UTC para cálculo consistente
     const oneDay = 1000 * 60 * 60 * 24;
     const diffTime = Math.abs(targetDate.getTime() - GAME_START_DATE.getTime());
     const diffDays = Math.floor(diffTime / oneDay);
-    return diffDays % terms.length;
+    const index = diffDays % terms.length;
+    console.log(`Diff days: ${diffDays}, Terms length: ${terms.length}, Index: ${index}`);
+    return index;
 }
 
 // --- VARIÁVEIS GLOBAIS DO JOGO ---
@@ -63,13 +71,13 @@ let secretWord;
 let secretExplanation;
 let currentHint;
 
-let guesses; // Tentativas do usuário no jogo atual
+let guesses; 
 const maxGuesses = 6;
-let currentGuessIndex; // Onde o usuário está agora na grade
+let currentGuessIndex; 
 let gameWon;
 let gameLost;
 
-let isArchiveMode = false; // Flag para saber se estamos no modo de arquivo de datas
+let isArchiveMode = false; 
 let currentPlayedDate = ''; // Para armazenar a data do jogo que está sendo jogado (dia atual ou arquivo)
 
 // --- ELEMENTOS HTML ---
@@ -81,51 +89,66 @@ const messageArea = document.getElementById('message-area');
 const explanationArea = document.getElementById('explanation-area');
 const revealedWord = document.getElementById('revealed-word');
 const wordExplanation = document.getElementById('word-explanation');
-const goToArchiveButton = document.getElementById('go-to-archive-button'); // Botão para ir ao arquivo
-const archiveReturnButton = document.getElementById('archive-return-button'); // Botão para voltar do arquivo
+const goToArchiveButton = document.getElementById('go-to-archive-button'); 
+const archiveReturnButton = document.getElementById('archive-return-button'); 
 
 // --- FUNÇÕES DO JOGO ---
 
 function loadGameState(dateStringFromUrl) {
-    // Define a data do jogo que está sendo carregado (do URL ou do dia atual)
+    console.log("loadGameState called with dateStringFromUrl:", dateStringFromUrl);
     currentPlayedDate = dateStringFromUrl || getTodayDateStringRioBranco();
-    const storageKeySuffix = `-${currentPlayedDate}`; // Sempre usa a data no sufixo da chave do localStorage
+    const storageKeySuffix = `-${currentPlayedDate}`; 
+    console.log("currentPlayedDate for this game instance:", currentPlayedDate, "Storage suffix:", storageKeySuffix);
 
-    // Determina o modo de jogo
-    isArchiveMode = !!dateStringFromUrl; // Se tem data na URL, é modo arquivo
+    isArchiveMode = !!dateStringFromUrl; 
+    console.log("isArchiveMode:", isArchiveMode);
 
-    // Obtém os dados da palavra para a data específica
     const wordIndex = getWordIndexForDate(currentPlayedDate);
     secretWordData = terms[wordIndex];
     secretWord = secretWordData.word.toUpperCase();
     secretExplanation = secretWordData.explanation;
     currentHint = secretWordData.hint;
+    console.log("Secret Word loaded:", secretWord, "Hint:", currentHint);
 
-    // Carrega o estado do jogo do localStorage para a data específica
     guesses = JSON.parse(localStorage.getItem(`guesses${storageKeySuffix}`)) || [];
     gameWon = JSON.parse(localStorage.getItem(`gameWon${storageKeySuffix}`)) || false;
     gameLost = JSON.parse(localStorage.getItem(`gameLost${storageKeySuffix}`)) || false;
     currentGuessIndex = guesses.length;
+    console.log("Loaded Guesses:", guesses, "GameWon:", gameWon, "GameLost:", gameLost, "Current Guess Index:", currentGuessIndex);
 
     // Controla a visibilidade dos botões de navegação
-    // O botão goToArchiveButton só existe em index.html
-    if (goToArchiveButton) goToArchiveButton.style.display = isArchiveMode ? 'none' : 'block';
-    // O botão archiveReturnButton só existe em index.html
-    if (archiveReturnButton) archiveReturnButton.style.display = isArchiveMode ? 'block' : 'none';
+    if (goToArchiveButton) {
+        console.log("goToArchiveButton found. Setting display.");
+        goToArchiveButton.style.display = isArchiveMode ? 'none' : 'block';
+    } else {
+        console.log("goToArchiveButton NOT found."); // Para depuração no archive.html
+    }
+    
+    if (archiveReturnButton) {
+        console.log("archiveReturnButton found. Setting display.");
+        archiveReturnButton.style.display = isArchiveMode ? 'block' : 'none';
+    } else {
+        console.log("archiveReturnButton NOT found."); // Para depuração em index.html
+    }
 }
 
 function initializeGame() {
+    console.log("initializeGame started.");
     const urlParams = new URLSearchParams(window.location.search);
     const selectedDate = urlParams.get('date');
+    console.log("URL parameter 'date':", selectedDate);
 
-    loadGameState(selectedDate); // Carrega o estado para a data selecionada ou para o dia atual
+    loadGameState(selectedDate); // This will log its own details
 
+    if (!hintText) console.error("Element #hint-text not found!");
     hintText.textContent = `Dica: ${currentHint}`;
     
+    if (!gridContainer) console.error("Element #grid-container not found!");
     gridContainer.style.setProperty('--word-length', secretWord.length);
-    gridContainer.innerHTML = ''; // Limpa a grade antes de criar
+    gridContainer.innerHTML = ''; 
 
-    // Cria as células da grade (6 linhas x tamanho da palavra)
+    // Cria as células da grade
+    console.log("Creating grid with", secretWord.length, "letters and", maxGuesses, "rows.");
     for (let i = 0; i < maxGuesses; i++) {
         const row = document.createElement('div');
         row.classList.add('row');
@@ -138,68 +161,82 @@ function initializeGame() {
         }
         gridContainer.appendChild(row);
     }
+    console.log("Grid created.");
 
     // Carrega tentativas anteriores e colore as células
-    guesses.forEach((guess, index) => {
-        const row = gridContainer.children[index];
-        const tempSecret = secretWord.split(''); 
-        const guessLetters = guess.split('');
+    if (guesses.length > 0) {
+        console.log("Loading previous guesses.");
+        guesses.forEach((guess, index) => {
+            const row = gridContainer.children[index];
+            const tempSecret = secretWord.split(''); 
+            const guessLetters = guess.split('');
 
-        // 1ª passagem: Marcar letras CORRETAS
-        for (let i = 0; i < secretWord.length; i++) {
-            const cell = row.children[i];
-            const letter = guessLetters[i];
-            cell.children[0].textContent = letter;
+            for (let i = 0; i < secretWord.length; i++) {
+                const cell = row.children[i];
+                const letter = guessLetters[i];
+                if (cell && cell.children[0]) { // Adição de segurança
+                    cell.children[0].textContent = letter;
+                }
 
-            if (letter === tempSecret[i]) {
-                cell.classList.add('correct');
-                tempSecret[i] = null;
-            }
-        }
-
-        // 2ª passagem: Marcar letras PRESENTES e AUSENTES
-        for (let i = 0; i < secretWord.length; i++) {
-            const cell = row.children[i];
-            const letter = guessLetters[i];
-
-            if (!cell.classList.contains('correct')) { 
-                const presentIndex = tempSecret.indexOf(letter);
-                if (presentIndex !== -1) {
-                    cell.classList.add('present');
-                    tempSecret[presentIndex] = null;
-                } else {
-                    cell.classList.add('absent');
+                if (letter === tempSecret[i]) {
+                    cell.classList.add('correct');
+                    tempSecret[i] = null;
                 }
             }
-        }
-    });
 
-    // --- MUDANÇA CRÍTICA AQUI: Lógica de exibição e habilitação do input ---
+            for (let i = 0; i < secretWord.length; i++) {
+                const cell = row.children[i];
+                const letter = guessLetters[i];
+
+                if (cell && !cell.classList.contains('correct')) { 
+                    const presentIndex = tempSecret.indexOf(letter);
+                    if (presentIndex !== -1) {
+                        cell.classList.add('present');
+                        tempSecret[presentIndex] = null;
+                    } else {
+                        cell.classList.add('absent');
+                    }
+                }
+            }
+        });
+        console.log("Previous guesses loaded and colored.");
+    } else {
+        console.log("No previous guesses to load.");
+    }
+
+
+    // --- MUDANÇA CRÍTICA: Lógica de exibição e habilitação do input ---
     if (gameWon || gameLost) {
-        // Se o jogo já terminou (ganhou ou perdeu), exibe a explicação e desabilita input
+        console.log("Game state: WON or LOST.");
         showMessage(gameWon ? "Você já acertou a palavra deste dia!" : `Fim de jogo! A palavra era: ${secretWord}`, gameWon ? 'success-message' : 'error-message');
         revealExplanation();
         disableInput();
     } else {
-        // Se o jogo NÃO terminou (seja do dia atual ou de arquivo), habilita o input para jogar
+        console.log("Game state: ONGOING. Enabling input.");
+        if (!guessInput) console.error("Element #guess-input not found!");
+        if (!submitButton) console.error("Element #submit-guess not found!");
         guessInput.disabled = false;
         submitButton.disabled = false;
         guessInput.focus(); 
-        // A explicação deve estar escondida se o jogo ainda está em andamento
+        if (!explanationArea) console.error("Element #explanation-area not found!");
         explanationArea.style.display = 'none'; 
     }
+    console.log("initializeGame finished.");
 }
 
 function checkGuess() {
+    console.log("checkGuess called.");
     const guess = guessInput.value.toUpperCase();
     messageArea.textContent = ''; 
 
     if (guess.length !== secretWord.length) {
         showMessage(`A palavra deve ter ${secretWord.length} letras!`);
+        console.log("Guess length mismatch.");
         return;
     }
     if (currentGuessIndex >= maxGuesses) {
         showMessage('Você não tem mais tentativas!');
+        console.log("Max guesses reached.");
         return;
     }
 
@@ -211,7 +248,9 @@ function checkGuess() {
     for (let i = 0; i < secretWord.length; i++) {
         const cell = currentRow.children[i];
         const letter = guessLetters[i];
-        cell.children[0].textContent = letter;
+        if (cell && cell.children[0]) { // Adição de segurança
+            cell.children[0].textContent = letter;
+        }
 
         if (letter === secretLetters[i]) {
             cell.classList.add('correct');
@@ -224,4 +263,107 @@ function checkGuess() {
         const cell = currentRow.children[i];
         const letter = guessLetters[i];
 
-        if (!cell.
+        if (cell && !cell.classList.contains('correct')) { 
+            const presentIndex = secretLetters.indexOf(letter);
+            if (presentIndex !== -1) {
+                cell.classList.add('present');
+                secretLetters[presentIndex] = null;
+            } else {
+                cell.classList.add('absent');
+            }
+        }
+    }
+
+    // Salva a tentativa para a data que está sendo jogada
+    localStorage.setItem(`guesses-${currentPlayedDate}`, JSON.stringify(guesses));
+    console.log("Guess saved for date:", currentPlayedDate);
+
+    currentGuessIndex++;
+    guessInput.value = ''; 
+    guessInput.focus();
+
+    if (guess === secretWord) {
+        gameWon = true;
+        localStorage.setItem(`gameWon-${currentPlayedDate}`, true);
+        showMessage('Parabéns! Você acertou!', 'success-message');
+        revealExplanation();
+        disableInput();
+        console.log("Game WON!");
+    } else if (currentGuessIndex >= maxGuesses) {
+        gameLost = true;
+        localStorage.setItem(`gameLost-${currentPlayedDate}`, true);
+        showMessage(`Fim de jogo! A palavra era: ${secretWord}`, 'error-message');
+        revealExplanation();
+        disableInput();
+        console.log("Game LOST!");
+    } else {
+        console.log("Guess processed. Game continues.");
+    }
+}
+
+function showMessage(msg, type = 'info') {
+    console.log("showMessage called:", msg, type);
+    if (!messageArea) console.error("Element #message-area not found!");
+    messageArea.textContent = msg;
+    messageArea.className = 'message'; 
+    messageArea.classList.add(type);
+}
+
+function revealExplanation() {
+    console.log("revealExplanation called.");
+    if (!explanationArea) console.error("Element #explanation-area not found!");
+    if (!revealedWord) console.error("Element #revealed-word not found!");
+    if (!wordExplanation) console.error("Element #word-explanation not found!");
+
+    explanationArea.style.display = 'block';
+    revealedWord.textContent = secretWord;
+    wordExplanation.textContent = secretExplanation;
+}
+
+function disableInput() {
+    console.log("disableInput called.");
+    if (!guessInput) console.error("Element #guess-input not found!");
+    if (!submitButton) console.error("Element #submit-guess not found!");
+    guessInput.disabled = true;
+    submitButton.disabled = true;
+}
+
+// --- EVENT LISTENERS ---
+// Adição de verificação para garantir que os elementos existem antes de adicionar listeners
+if (submitButton) {
+    submitButton.addEventListener('click', checkGuess);
+} else {
+    console.error("Submit button not found, cannot add event listener.");
+}
+
+if (guessInput) {
+    guessInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !guessInput.disabled) {
+            checkGuess();
+        }
+    });
+} else {
+    console.error("Guess input not found, cannot add event listener.");
+}
+
+
+if (goToArchiveButton) { 
+    goToArchiveButton.addEventListener('click', () => {
+        console.log("Go to archive button clicked.");
+        window.location.href = 'archive.html'; 
+    });
+} else {
+    console.log("Go to archive button not found (this is normal on archive.html).");
+}
+
+if (archiveReturnButton) {
+    archiveReturnButton.addEventListener('click', () => {
+        console.log("Archive return button clicked.");
+        window.location.href = 'index.html'; 
+    });
+} else {
+    console.log("Archive return button not found (this is normal on index.html, unless it's an archived game).");
+}
+
+// --- INICIALIZA O JOGO ---
+console.log("
